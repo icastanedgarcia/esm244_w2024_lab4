@@ -23,26 +23,24 @@ This is an example of point pattern analysis with a density plot, and the G- & L
 
 ```{r}
 ### Read in the tree vole data
-voles_sf <- read_sf(dsn = here("redtreevoledata"), 
-                 layer = "ds033") %>% 
+voles_sf <- read_sf(dsn = here("data/voledata"), 
+                    layer = "ds033") %>% 
   janitor::clean_names() %>%
-  select(county) %>% # Only select the county attribute; geometry sticks
-  filter(county == "HUM") %>% # Only keep observations in Humboldt County
-  st_transform(crs = 32610) # Update CRS to UTM zone 10 N
+  select(county) %>%      ### Only select the county attribute; geometry sticks
+  filter(county == "HUM") ### Only keep observations in Humboldt County
 
 
 ### Plot it (exploratory)
-plot(voles_sf)
+# plot(voles_sf)
 
 
 ### Get Humboldt County outline
-humboldt_sf <- read_sf(dsn = here("redtreevoledata"), 
-                    layer = "california_county_shape_file") %>% 
+humboldt_sf <- read_sf(dsn = here("data/voledata"), 
+                    layer = "ca_counties") %>% 
   janitor::clean_names() %>%
   filter(name == "Humboldt") %>% # Isolate Humboldt County
-  select(name) %>% # Only keep one attribute (name) to simplify
-  st_set_crs(4326) %>%
-  st_transform(crs = 32610)
+  select(name) %>% ### Only keep one attribute (name) to simplify
+  st_transform(crs = st_crs(voles_sf))
 
 
 ### plot them together
@@ -58,18 +56,17 @@ ggplot() +
   theme_void()
 ```
 
-These need to be combined into spatial point pattern data (points + window combo), and for point pattern analysis this **requires a 2D projection** (in this case, UTM), which is why we set the CRS to 32610 above. This looks quite a bit different from what we've done so far - it uses functions in `spatstat` to create point patterns that play nicely with other functions for data viz & point pattern analysis.
+These need to be combined into spatial point pattern data (points + window combo), and for point pattern analysis this **requires a 2D projection** (in this case, UTM), which is why we used the voles data CRS (UTM projection) instead of the county data CRS (unprojected lat-long). This looks quite a bit different from what we've done so far - it uses functions in `spatstat` to create point patterns that play nicely with other functions for data viz & point pattern analysis.
 
 ```{r}
-### Convert to spatial point pattern
+### Convert vole observations to spatial point pattern
 voles_ppp <- as.ppp(voles_sf) 
 
-### Convert to spatial point pattern from spatstat
+### Convert county boundary to observation window
 humboldt_win <- as.owin(humboldt_sf) 
 
 ### Combine as a point pattern object (points + window):
 voles_full <- ppp(voles_ppp$x, voles_ppp$y, window = humboldt_win)
-
 
 plot(voles_full) 
 ### Illegal point (outside window) shows up as the plus sign
@@ -82,7 +79,7 @@ plot(voles_full)
 Run to see vole "hotspots" by kernel density, then see what happens when you change sigma here!
 
 ```{r}
-voles_density <- density(voles_full, sigma = 5000)
+voles_density <- density(voles_full, sigma = 5000) ### try different sigmas
 
 plot(voles_density)
 ```
@@ -90,6 +87,8 @@ plot(voles_density)
 Pretty clear that there are "hotspots" where voles are observed - both in the originally plotted data and in the density plot. How can we compare this to complete spatial randomness? 
 
 ```{r}
+#| eval: false
+
 ### Can you start viewing this in tmap? Yes, rasterize it: 
 vole_r <- rast(voles_density)
 crs(vole_r) <- crs(voles_sf)
@@ -98,8 +97,7 @@ crs(vole_r) <- crs(voles_sf)
 tmap_mode("view")
 
 tm_shape(vole_r) +
-  tm_raster(midpoint = NA, 
-            palette = "Reds", 
+  tm_raster(palette = "Reds", 
             legend.show = FALSE)
 ```
 
@@ -117,21 +115,19 @@ What is going on in this code?
 ### Make a sequence of distances over which you'll calculate G(r)
 r_vec <- seq(0, 10000, by = 100) 
 
-
-gfunction <- envelope(voles_full, fun = Gest, r = r_vec, 
-                      nsim = 100) 
+gfunction_out <- envelope(voles_full, fun = Gest, r = r_vec, 
+                          nsim = 100) 
 ### Calculate the actual and theoretical G(r) values, using 100 
 ### simulations of CSR for the "theoretical" outcome
 
 
-gfunction ### << Check the output of gfunction, then...
-
+gfunction_out ### Check the output of gfunction, then...
+plot(gfunction_out)
 
 ### Gather this to plot series in ggplot:
-gfunction_long <- gfunction %>% 
+gfunction_long <- gfunction_out %>% 
   as.data.frame() %>% 
   pivot_longer(cols = obs:hi, names_to = "model", values_to = "g_val")
-
 
 ### Then make a graph in ggplot:
 ggplot(data = gfunction_long, aes(x = r, y = g_val, group = model)) +
@@ -149,11 +145,12 @@ For a completely random (uniform Poisson) point pattern, the theoretical value o
 ```{r}
 r_vec2 <- seq(0, 80000, by = 5000)
 
-lfunction <- envelope(voles_full, fun = Lest, r = r_vec2, 
-                      nsim = 10)
+lfunction_out <- envelope(voles_full, fun = Lest, r = r_vec2, 
+                          nsim = 10)
+plot(lfunction_out)
 
-# Gather this to plot series in ggplot:
-lfunction_long <- lfunction %>% 
+### Students do: Gather this to plot series in ggplot:
+lfunction_long <- lfunction_out %>% 
   as.data.frame() %>% 
   pivot_longer(cols = obs:hi, names_to = "model", values_to = "l")
 
@@ -166,7 +163,6 @@ ggplot(data = lfunction_long, aes(x = r, y = l, group = model)) +
 
 We again see that at lower distances, our data overall has a higher density of nearest neighbors compared to a simulated CSR scenario. Again, evidence of clustering. 
 
-## End Lab 8 part 1
 
 
 
