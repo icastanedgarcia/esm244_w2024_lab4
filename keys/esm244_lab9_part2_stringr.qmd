@@ -1,0 +1,138 @@
+---
+title: "ESM 244 Lab Week 4 - strings in stringr & other stuff"
+author: "Casey O'Hara, Nathan Grimes, Allison Horst"
+date: "2/1/2024"
+format: 
+  html:
+    code-fold: show
+    toc: true
+    number-sections: true
+    embed-resources: true
+editor: visual
+theme: simplex
+execute:
+  echo: true
+  message: false
+  warning: false
+---
+
+```{r setup}
+library(tidyverse)
+```
+
+We haven't done a ton of work with strings so far in 206 or 244. In this part, we'll learn a bit about how to deal with infamous **regular expressions** (*regex* or *regexp*) using nice functions in the `stringr` package (in the `tidyverse`) to make our lives easier.
+
+Want to learn more about working with regex *without* the `stringr` package functions? Read a nice introduction from Roger Peng [HERE](https://bookdown.org/rdpeng/rprogdatascience/regular-expressions.html).
+
+## Useful functions in `stringr`
+
+We'll create a sample vector to see how various `stringr` functions work.  We'll also do some work with the `starwars` dataset from `dplyr` - since we have the `tidyverse` attached, the dataset is easily available. 
+
+```{r}
+# Make a little vector
+vec <- c("  A Unicorn     Fish", 
+         " add   Cornmeal ", 
+         " Herbivore Carnivore  ",
+         "  French FRIES", 
+         " acorn squash  ")
+
+```
+
+Check it out by running `View(starwars)` in the Console. OK here we go. 
+
+### Change string case
+
+It can also be useful to update the *case* of strings in your code. Since, for example, "Fish" will be seen entirely differently from "fish". 
+We can use the `str_to_*()` functions to change the case. 
+
+- `str_to_lower()`: make everything lowercase
+- `str_to_upper()`: make everything to uppercase
+- `str_to_title()`: convert to title case
+
+Let's try it out with our vector: 
+
+```{r}
+str_to_lower(vec) 
+str_to_upper(vec)
+str_to_title(vec)
+```
+### Remove white space
+
+In some of the strings of our vector `vec`, we have really obnoxious white space. This can be problematic because excess white spaces can mess with groupings or finding matches (i.e. because " hello friend" is, in R's mind, definitely not the same group as "hello friend" or "hello   friend ").
+
+There are a few helper functions in the `stringr` package to help us out. Let's use two of them: `str_trim()` and `str_squish()`. 
+
+- `str_trim()`: removes leading and trailing whitespace
+- `str_squish()`: removes leading / trailing whitespace and excess interior whitespace
+
+```{r}
+str_trim(vec) # Notice there are still excess spaces in the middle
+
+str_squish(vec) # Notice that now trailing, leading and excess interior whitespaces are removed
+```
+
+### Detect a pattern
+
+Use `stringr::str_detect()` to detect a string pattern. 
+
+Let's see how it works first, then try it out for something that might be useful: 
+
+```{r}
+
+# detect a string pattern: 
+str_detect(vec, pattern = "corn")
+str_detect(str_to_lower(vec), pattern = "corn")
+str_detect(str_to_lower(vec), pattern = "c.rn") ### `.` is a regex wildcard
+
+```
+We see that it returns a T/F vector indicating whether or not the pattern "corn" (or "c.rn") exists within each element of the vector. 
+
+How might we use that in a data frame? It can be helpful to use `str_detect()` within `filter()` to only keep observations that contain that pattern in the specified variable. 
+
+For example: Only keep observations where the pattern "walk" exists within the character name. 
+
+```{r}
+walk_subset <- starwars %>% 
+  filter(str_detect(name, pattern = "walk"))
+
+### Regex example: two or more cap letters!
+cap_subset <- starwars %>%
+  filter(str_detect(name, pattern = '[A-Z]{2, }')) ### Regex is powerful but complicated, like the force!
+```
+
+
+### Replace a pattern
+
+Use `stringr::str_replace()` to replace a pattern with something else.
+
+```{r}
+str_replace(vec, pattern = "r", replacement = "ARRR") ### first instance only
+str_replace_all(vec, pattern = "a", replacement = "ZZZ")
+```
+
+And with the `starwars` data, let's replace any "Sky" string pattern with "CIELO", overwriting the existing `name` column.
+
+```{r}
+sw_cielo <- starwars %>% 
+  mutate(name = str_replace(name, pattern = "Sky", replacement = "CIELO"))
+```
+
+And with regex:
+```{r}
+sw_wawa <- starwars %>%
+  mutate(name2 = str_replace(name, pattern = '(w|W)b?a.+', replacement = 'WAWA')) %>%
+  select(name, name2)
+```
+
+And we can use these things in combination, usually within `mutate()` if it's to update a column in a data frame.
+
+For example, with `starwars` data: 
+
+```{r}
+sw_combo <- starwars %>% 
+  mutate(name = str_to_lower(name)) %>% 
+  filter(str_detect(name, pattern = "darth")) %>% ### why not "Darth"?
+  mutate(name = str_replace(name, pattern = "darth", replacement = "happy"))
+```
+
+

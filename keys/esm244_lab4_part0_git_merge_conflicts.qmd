@@ -1,0 +1,105 @@
+---
+title: "Git in the wild: co-editing code and dealing with merge conflicts"
+format: 
+  html:
+    embed-resources: true
+theme: darkly
+editor: visual
+---
+
+So far we have just been working with Git and Github within our own local computers and personal user accounts.  But for your Shiny app (and big projects in real life!) you will be collaborating and co-working with others, with multiple people working in the same repository and on the same files!  What does this look like, what problems may arise, and how can we make collaborating as smooth as possible?
+
+Often, that means you have a primary document (e.g. Quarto file or R script), and different people will be working on different features, with a plan to eventually merge in their changes to the main branch. But the way Git works, if two people accidentally work on the same part of the script at the same time, we may get a dreaded "merge conflict!"
+
+In this discussion, we’ll learn how git deals with merge conflicts when we have multiple versions getting merged into main branch.  Then we'll learn a couple strategies to avoid them, and also learn how to deal with them so they are not so scary.
+
+NOTE: Branches in Git can allow for different users to work safely and independently within the repo, but do not eliminate, only potentially postpone, merge conflicts.  We may introduce branches in a later week.
+
+## Start: Casey and Nathan demo
+
+Follow along with Nathan & Casey, who will demo the steps below. Then, you’ll work with a partner to practice the same thing in your own collaborative project. 
+
+## Step 1: Assign partners
+
+* Pair up with another student in lab, designating <span style="color:orange;">PARTNER 1</span> and <span style="color:cyan;">PARTNER 2</span>. 
+* <span style="color:cyan;">PARTNER 2</span>: share your GitHub username with your partner so they can find & add you as a collaborator.
+
+## Step 2: <span style="color:orange;">PARTNER 1</span> - Project setup
+
+* Create a repo in GitHub, with a ReadMe, named `wild-git-collab`.
+* Clone to create a version controlled R Project in RStudio
+* Drop the file `git_wild.qmd` into the project root (file is in repo for lab 4).
+* Stage, commit, pull, then push to main
+* Add your partner as a collaborator to the project on GitHub (Settings > Manage Access)
+
+## Step 3: <span style="color:cyan;">PARTNER 2</span> - Accept the invitation and clone
+
+* Accept the invitation to be a collaborator on the project
+* Clone to get the project up-and-running locally in RStudio.  Note, DO NOT FORK - as a collaborator, you have read and write privileges in Partner 1's repository.
+
+## Step 4: <span style="color:green;">BOTH PARTNERS</span> - Update separate code chunks, stage-commit-pull-push
+
+* In the Quarto document, find the code chunk with your partner number as the code chunk name. Within that code chunk, update the code to complete the commented instructions.
+* Stage, commit, pull, then push changes.  If you pushed your changes before your partner, you should see "up to date" when you pull; if your partner pushed changes first, you will see a bunch of changes listed when you pull. 
+* Check the updated `git_wild.qmd` file in remote main (i.e., on Github), and see that your merged updates exist there.
+* Note that git just deals with these changes - we do not get a merge conflict every time there is a difference from main getting merged in (that would make it pretty tedious to do anything with git, right?)
+
+Git tracks changes line-by-line (accounting for new lines or deleted lines as changes are introduced) - so here, working in separate, well-defined code chunks, we do not encounter any problems.  For your Shiny app, perhaps one person works on the UI while the other works on the server, or you use commenting to define safe working spaces in the code.
+
+## Step 5: <span style="color:green;">BOTH PARTNERS</span> - Pull updates to your local 
+
+Following Step 4, there may now be changes that exist in remote main that do not exist in your local version.  If your partner pushed first, you have already pulled their changes (pull anyway just to be safe, you'll probably see "everything up to date")... but if you pushed changes before your partner, pull now to get their changes.
+
+
+## Step 6: <span style="color:green;">BOTH PARTNERS</span> - Do some unsupervised editing in `break-it-1`
+
+* In the Quarto document, find the code chunk named `break-it-1`, which contains existing code. Examine the code, and prepare to totally revise it or delete it!
+* Write some random code & comments in the `break-it-1` chunk to make a totally different subset or graph (with a different object name) starting from the `diamonds` dataset (built into `ggplot2` package). Do not tell your partner what you're doing there.
+* Both partners may stage and commit (or wait til the next steps), but DO NOT pull or push yet.
+
+
+## Step 7: <span style="color:orange;">PARTNER 1</span> - Commit-pull-push your changes
+
+* Once you’ve updated the code, Partner 1, commit-pull-push your changes to the remote version. There shouldn’t be any issues.  Let partner 2 when you've done that.
+
+## Step 8: <span style="color:cyan;">PARTNER 2</span> - Commit-pull-push your changes (there WILL be a conflict)
+
+* Stage and commit your changes anyway (Git will give an error if you try to pull without committing your changes), then pull to try to merge Partner 1's changes with yours.  
+* Because you were both working in the same spot, but Partner 1 beat you to the punch, you will get a merge conflict! 
+* Examine the Quarto document: Git identifies the lines where there is a merge conflict (and surrounds them with alligator mouths). You can choose which one, or keep both, or rewrite the entire chunk! 
+
+```
+<<<<<<< HEAD
+# code and comments pushed by Partner 1
+=======
+# code and comments committed (but not pushed!) by Partner 2
+>>>>>>> b2
+```
+
+* Delete everything but the code you want to keep - including the header line, the footer line, and the divider line.
+* Once you’ve resolved, create a new commit and then pull-push to Github.
+
+## Step 9: <span style="color:green;">BOTH PARTNERS</span> - Merge updates into your local version
+
+Following Step 4, there may now be changes that exist in remote main that do not exist in your local version.  Partner 1 must pull to see the resolved version pushed by Partner 2.  Partner 2 should pull too, just because it's free and it's a good habit to do so frequently when collaborating.
+ 
+## Step 10: <span style="color:green;">BOTH PARTNERS</span>, do some unsupervised editing in `break-it-2`
+
+In the Quarto document, find the empty code chunk named `break-it-2`. Write some random code & comments in the `break-it-2` chunk to make a subset or graph starting from the `diamonds` dataset. Do not tell your partner what you're doing there. 
+
+## Step 11: <span style="color:cyan;">PARTNER 2</span> - stage-commit-pull-push
+
+Once you’ve updated the code, stage, commit, pull, push.  There should be no conflicts. Let your Partner 1 know when you’ve done that.
+
+## Step 12: <span style="color:orange;">PARTNER 1</span> - stage-commit-pull and resolve conflict
+
+Partner 1, since Partner 2 has updated main *since* you last synced it, you will get a conflict. Commit anyway, and pull, you will need to resolve it as noted above, then commit & push after resolving.
+
+## Step 13: <span style="color:green;">BOTH PARTNERS</span> - Merge updates into local version
+
+Following Step 12, there may now be changes that exist in remote main that do not exist in your local version.  Partner 2 must pull to see the resolved version pushed by Partner 1.  Partner 1 should pull too, just because it's free and it's a good habit to do so frequently when collaborating.
+
+## Wrapup: verify all versions are up to date
+
+Now you should see all updates to reflected in the local versions of both Partner 1 and Partner 2 as well as on Github. YAY!
+

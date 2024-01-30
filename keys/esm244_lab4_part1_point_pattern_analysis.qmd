@@ -1,16 +1,24 @@
 ---
-title: 'ESM 244 Lab 8 Part 1: Spatial point pattern analysis'
-author: "Allison Horst, Casey O'Hara"
-date: "2/24/2022"
-output:
-  html_document: default
-  pdf_document: default
+title: 'ESM 244 Lab 4 Part 1: Spatial point pattern analysis'
+author: "Casey O'Hara, Nathan Grimes, Allison Horst"
+date: "2/1/2024"
+format: 
+  html:
+    code-fold: show
+    toc: true
+    number-sections: true
+    embed-resources: true
+editor: visual
+theme: superhero
+execute:
+  echo: true
+  message: false
+  warning: false
 ---
 
 See: - CRS & proj4 components breakdown: https://www.earthdatascience.org/courses/earth-analytics/spatial-data-r/reproject-vector-data/
 
-```{r setup, include = TRUE, warning = FALSE, message = FALSE}
-knitr::opts_chunk$set(echo = TRUE, warning= FALSE, message = FALSE)
+```{r setup}
 library(spatstat)
 library(terra) 
 library(tidyverse)
@@ -32,7 +40,6 @@ voles_sf <- read_sf(dsn = here("data/voledata"),
 
 ### Plot it (exploratory)
 # plot(voles_sf)
-
 
 ### Get Humboldt County outline
 humboldt_sf <- read_sf(dsn = here("data/voledata"), 
@@ -86,7 +93,7 @@ plot(voles_density)
 
 Pretty clear that there are "hotspots" where voles are observed - both in the originally plotted data and in the density plot. How can we compare this to complete spatial randomness? 
 
-```{r}
+```{r SKIP FOR LAB}
 #| eval: false
 
 ### Can you start viewing this in tmap? Yes, rasterize it: 
@@ -120,7 +127,6 @@ gfunction_out <- envelope(voles_full, fun = Gest, r = r_vec,
 ### Calculate the actual and theoretical G(r) values, using 100 
 ### simulations of CSR for the "theoretical" outcome
 
-
 gfunction_out ### Check the output of gfunction, then...
 plot(gfunction_out)
 
@@ -149,11 +155,10 @@ lfunction_out <- envelope(voles_full, fun = Lest, r = r_vec2,
                           nsim = 10)
 plot(lfunction_out)
 
-### Students do: Gather this to plot series in ggplot:
+### STUDENTS DO: Gather this to plot series in ggplot:
 lfunction_long <- lfunction_out %>% 
   as.data.frame() %>% 
   pivot_longer(cols = obs:hi, names_to = "model", values_to = "l")
-
 
 ggplot(data = lfunction_long, aes(x = r, y = l, group = model)) +
   geom_line(aes(color = model)) +

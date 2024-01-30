@@ -1,22 +1,31 @@
 ---
-title: "ESM 244 Lab Week 9 - The Hobbit text analysis"
-author: "Allison Horst, Casey O'Hara"
-output: html_document
+title: "ESM 244 Lab Week 4 - The Hobbit text analysis"
+author: "Casey O'Hara, Nathan Grimes, Allison Horst"
+date: "2/1/2024"
+format: 
+  html:
+    code-fold: show
+    toc: true
+    embed-resources: true
+editor: visual
+theme: simplex
+execute:
+  echo: true
+  message: false
+  warning: false
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+```{r setup}
 library(tidyverse)
 library(tidytext)
-library(textdata)
 library(pdftools)
 library(ggwordcloud)
 ```
 
-## Get The Hobbit
+## Get text of The Hobbit
 
-```{r, cache = TRUE}
-hobbit_text <- pdf_text(here::here('data', 'the-hobbit.pdf'))
+```{r}
+hobbit_text <- pdftools::pdf_text(here::here('data', 'the-hobbit.pdf'))
 ```
 
 - Each row is a page of the PDF (i.e., this is a vector of strings, one for each page)
@@ -27,6 +36,21 @@ Example: Just want to get text from a single page (e.g. Page 34)?
 ```{r}
 hobbit_p34 <- hobbit_text[34]
 ```
+
+## The analysis:
+
+Using the text of The Hobbit by J.R.R. Tolkien:
+
+1. Find the top 5 words per chapter (excluding common and non-informative words).
+2. Create a word cloud (just for chapter 1).
+3. How does the mood of the text change over the various chapters?
+
+### Pseudocode:
+
+
+
+
+## Prep the data
 
 From Jessica Couture and Casey O'Hara's [text mining workshop](https://github.com/oharac/text_workshop) for eco-data-science: “pdf_text() returns a vector of strings, one for each page of the pdf. So we can mess with it in tidyverse style, let’s turn it into a dataframe, and keep track of the pages. Then we can use stringr::str_split() to break the pages up into individual lines. Each line of the pdf is concluded with a backslash-n, so split on this. We will also add a line number in addition to the page number."
 
@@ -83,19 +107,15 @@ We will *remove* stop words using `tidyr::anti_join()`, which will *omit* any wo
 ```{r}
 head(stop_words)
 
-hobbit_words_clean <- hobbit_words %>% 
+wordcount_clean <- hobbit_wordcount %>% 
   anti_join(stop_words, by = 'word')
 ```
-Then let's try counting them again: 
-```{r}
-nonstop_counts <- hobbit_words_clean %>% 
-  count(chapter, word)
-```
+
 
 ## Find the top 5 words from each chapter
 
 ```{r}
-top_5_words <- nonstop_counts %>% 
+top_5_words <- wordcount_clean %>% 
   group_by(chapter) %>% 
   arrange(-n) %>% 
   slice(1:5) %>%
@@ -110,7 +130,7 @@ ggplot(data = top_5_words, aes(x = n, y = word)) +
 ## Let's make a word cloud for Chapter 1
 
 ```{r}
-ch1_top100 <- nonstop_counts %>% 
+ch1_top100 <- wordcount_clean %>% 
   filter(chapter == 1) %>% 
   arrange(-n) %>% 
   slice(1:100)
@@ -142,9 +162,10 @@ Let's explore the sentiment lexicons. "bing" included, other lexicons ("afinn", 
 
 **WARNING:** These collections include the most offensive words you can think of. 
 
+### afinn lexicon
+
 "afinn": Words ranked from -5 (very negative) to +5 (very positive)
 
-positive)
 ```{r}
 afinn_lex <- get_sentiments(lexicon = "afinn")
 ### you may be prompted to download an updated lexicon - say yes!
@@ -157,76 +178,56 @@ afinn_pos <- get_sentiments("afinn") %>%
 DT::datatable(afinn_pos)
 ```
 
+### bing lexicon
+
 For comparison, check out the bing lexicon: 
 
 ```{r}
 bing_lex <- get_sentiments(lexicon = "bing")
 ```
 
-And the nrc lexicon:https://saifmohammad.com/WebPages/NRC-Emotion-Lexicon.htm
-Includes bins for 8 emotions (anger, anticipation, disgust, fear, joy, sadness, surprise, trust) and positive / negative. 
+Note the bing lexicon is the simplest of all - just positive/negative!
+
+
+### nrc lexicon
+
+And the nrc lexicon:https://saifmohammad.com/WebPages/NRC-Emotion-Lexicon.htm includes bins for 8 emotions (anger, anticipation, disgust, fear, joy, sadness, surprise, trust) and positive / negative. 
 
 **Citation for NRC lexicon**: Crowdsourcing a Word-Emotion Association Lexicon, Saif Mohammad and Peter Turney, Computational Intelligence, 29 (3), 436-465, 2013.
 
-Now nrc:
 ```{r}
 nrc_lex <- get_sentiments(lexicon = "nrc")
 ```
 
-### Sentiment analysis with afinn: 
+Note some words fall into multiple emotions!
 
-First, bind words in `hobbit_nonstop_words` to `afinn` lexicon:
-```{r}
-hobbit_afinn <- hobbit_words_clean %>% 
-  inner_join(afinn_lex, by = 'word')
-```
-
-Let's find some counts (by sentiment ranking):
-```{r}
-afinn_counts <- hobbit_afinn %>% 
-  group_by(chapter, value) %>%
-  summarize(n = n())
-
-# Plot them: 
-ggplot(data = afinn_counts, aes(x = value, y = n)) +
-  geom_col() +
-  facet_wrap(~chapter)
-
-# Find the mean afinn score by chapter: 
-afinn_means <- hobbit_afinn %>% 
-  group_by(chapter) %>% 
-  summarize(mean_afinn = mean(value))
-
-ggplot(data = afinn_means, 
-       aes(x = fct_rev(factor(chapter)),
-           y = mean_afinn)) +
-           # y = fct_rev(as.factor(chapter)))) +
-  geom_col() +
-  coord_flip()
-  
-```
-
-
-### Sentiment analysis with bing: 
+## Sentiment analysis with bing: 
 
 First, bind words in `hobbit_nonstop_words` to `bing` lexicon:
+
 ```{r}
-hobbit_bing <- hobbit_words_clean %>% 
-  inner_join(bing_lex, by = 'word')
+hobbit_bing <- hobbit_words %>% 
+  inner_join(bing_lex, by = 'word') ### why inner_join?
 ```
 
 Let's find some counts of positive vs negative:
+
 ```{r}
 bing_counts <- hobbit_bing %>% 
-  # group_by(chapter, sentiment) %>%
-  # summarize(n = n())
-  count(chapter, sentiment)
+  group_by(chapter, sentiment) %>%
+  summarize(n = n())
 
 # Plot them: 
 ggplot(data = bing_counts, aes(x = sentiment, y = n)) +
   geom_col() +
   facet_wrap(~chapter)
+```
 
+But, what if the writer just likes to use more positive or more negative words? How can we balance that out?  Get a book-wide (or catalog-wide) average of sentiment and compare each chapter to that average!
+
+Here log ratios are great!  A simple ratio of + to -, plotted as a bar, will show a wildly positive chapter (10 positives for each negative) as 10, but show a wildly negative chapter (10 negs for each pos) as 0.1.  Log scaling means neutral = 0 (ratio = 1), and wildly positive shows the same length as wildly negative but in opposite directions.
+
+```{r}
 # find log ratio score overall:
 bing_log_ratio_book <- hobbit_bing %>% 
   summarize(n_pos = sum(sentiment == 'positive'),
@@ -255,25 +256,61 @@ ggplot(data = bing_log_ratio_ch,
   theme(legend.position = 'none')
   
 ```
+### Sentiment analysis with afinn (NOT DONE IN LAB) 
 
-### Now with NRC lexicon
+First, bind words in `hobbit_nonstop_words` to `afinn` lexicon:
+
+```{r}
+hobbit_afinn <- hobbit_words %>% 
+  inner_join(afinn_lex, by = 'word') ### why inner_join?
+```
+
+Let's find some counts (by sentiment ranking):
+
+```{r}
+afinn_counts <- hobbit_afinn %>% 
+  group_by(chapter, value) %>%
+  summarize(n = n())
+
+# Plot them: 
+ggplot(data = afinn_counts, aes(x = value, y = n)) +
+  geom_col() +
+  facet_wrap(~chapter)
+
+# Find the mean afinn score by chapter: 
+afinn_means <- hobbit_afinn %>% 
+  group_by(chapter) %>% 
+  summarize(mean_afinn = mean(value))
+
+ggplot(data = afinn_means, 
+       aes(y = fct_rev(factor(chapter)),
+           x = mean_afinn)) +
+  geom_col()
+  
+```
+
+
+
+### Now with NRC lexicon (NOT DONE IN LAB)
 
 Recall, this assigns words to sentiment bins. Let's bind our hobbit data to the NRC lexicon: 
 
 ```{r}
-hobbit_nrc <- hobbit_words_clean %>% 
-  inner_join(get_sentiments("nrc"))
+hobbit_nrc <- hobbit_words %>% 
+  inner_join(get_sentiments("nrc"), by = 'word')
 ```
+
 Let's find the count of words by chapter and sentiment bin: 
 
 ```{r}
 hobbit_nrc_counts <- hobbit_nrc %>% 
-  count(chapter, sentiment)
+  group_by(chapter, sentiment) %>%
+  summarize(n = n())
 
 ggplot(data = hobbit_nrc_counts, aes(x = n, y = sentiment)) +
   geom_col() +
   facet_wrap(~chapter)
-### perhaps order or color the sentiments by positive/negative
+### perhaps order or color the sentiments by positive/negative?
 
 ggplot(data = hobbit_nrc_counts, aes(x = n, 
                                      y = factor(chapter) %>%
@@ -284,4 +321,3 @@ ggplot(data = hobbit_nrc_counts, aes(x = n,
 
 ```
 
-### End text mining, exploration, & sentiment analysis introduction
