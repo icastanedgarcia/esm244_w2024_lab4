@@ -78,12 +78,10 @@ Use `stringr::str_detect()` to detect a string pattern.
 Let's see how it works first, then try it out for something that might be useful: 
 
 ```{r}
-
 # detect a string pattern: 
 str_detect(vec, pattern = "corn")
 str_detect(str_to_lower(vec), pattern = "corn")
 str_detect(str_to_lower(vec), pattern = "c.rn") ### `.` is a regex wildcard
-
 ```
 We see that it returns a T/F vector indicating whether or not the pattern "corn" (or "c.rn") exists within each element of the vector. 
 
@@ -97,7 +95,9 @@ walk_subset <- starwars %>%
 
 ### Regex example: two or more cap letters!
 cap_subset <- starwars %>%
-  filter(str_detect(name, pattern = '[A-Z]{2, }')) ### Regex is powerful but complicated, like the force!
+  filter(str_detect(name, pattern = '[A-Z]{2,}')) 
+  ### NOTE: NO SPACE AFTER COMMA
+  ### Regex is powerful but complicated, like the force!
 ```
 
 
@@ -135,4 +135,27 @@ sw_combo <- starwars %>%
   mutate(name = str_replace(name, pattern = "darth", replacement = "happy"))
 ```
 
+## Other useful functions in `stringr` (NOT RUN IN LAB)
+
+`str_extract`/`str_extract_all` to grab all instances that match a pattern (useful when using regex pattern strings)
+
+```{r}
+sw_firstnames <- starwars %>%
+  mutate(firstname = str_extract(name, '[A-Za-z0-9]+')) %>% ### EXCLUDES spaces and punctuation
+  select(name, firstname)
+```
+
+`str_locate` to identify positions of matches (regex or otherwise) - trickier to use in a dataframe but possible!
+
+```{r}
+sw_where_sky <- starwars$name %>% str_to_lower() %>% str_locate('sky')
+```
+
+`str_sub` to extract characters by position in a string
+
+```{r}
+sw_abbr <- starwars %>%
+  select(name, homeworld) %>%
+  mutate(homeworld_abbr = str_sub(homeworld, start = 1, end = 3))
+```
 
