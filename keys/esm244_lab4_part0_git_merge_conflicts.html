@@ -3021,10 +3021,21 @@ vertical-align: -.125em;
 </section>
 <section id="step-2-partner-1---project-setup" class="level2">
 <h2 class="anchored" data-anchor-id="step-2-partner-1---project-setup">Step 2: <span style="color:orange;">PARTNER 1</span> - Project setup</h2>
+<p>Repo setup option 1 - starting from Github:</p>
 <ul>
-<li>Create a repo in GitHub, with a ReadMe, named <code>wild-git-collab</code>.</li>
+<li>Create a repo in GitHub, with a ReadMe, named <code>wild-git-collab</code> or something similar.</li>
 <li>Clone to create a version controlled R Project in RStudio</li>
-<li>Drop the file <code>git_wild.qmd</code> into the project root (file is in repo for lab 4).</li>
+</ul>
+<p>Repo setup option 2 - starting from local computer:</p>
+<ul>
+<li>Create a new project in RStudio. Create it as a new directory (NOT version control!) and leave the default settings; call it <code>wild-git-collab</code> or something similar.</li>
+<li>Create a New file –&gt; Markdown file (NOT R Markdown) in the project, and in the doc write your name. Save the file as <code>README.md</code></li>
+<li>In the console, type <code>usethis::use_git()</code> to turn the directory into a git-enabled directory. It will ask if you want to commit the new file - choose the correct number to do so. Then it will ask if you want to restart - again, choose the correct number to do so.</li>
+<li>After R restarts, in the console, type <code>usethis::use_github()</code> to connect your local repository to your Github account.</li>
+</ul>
+<p>After repo setup, either option:</p>
+<ul>
+<li>Copy the file <code>git_wild.qmd</code> into the project root (file is in repo for lab 4).</li>
 <li>Stage, commit, pull, then push to main</li>
 <li>Add your partner as a collaborator to the project on GitHub (Settings &gt; Manage Access)</li>
 </ul>

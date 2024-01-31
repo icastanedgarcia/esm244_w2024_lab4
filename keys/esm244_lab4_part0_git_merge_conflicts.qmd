@@ -26,9 +26,21 @@ Follow along with Nathan & Casey, who will demo the steps below. Then, you’ll 
 
 ## Step 2: <span style="color:orange;">PARTNER 1</span> - Project setup
 
-* Create a repo in GitHub, with a ReadMe, named `wild-git-collab`.
+Repo setup option 1 - starting from Github:
+
+* Create a repo in GitHub, with a ReadMe, named `wild-git-collab` or something similar.
 * Clone to create a version controlled R Project in RStudio
-* Drop the file `git_wild.qmd` into the project root (file is in repo for lab 4).
+
+Repo setup option 2 - starting from local computer:
+
+* Create a new project in RStudio.  Create it as a new directory (NOT version control!) and leave the default settings; call it `wild-git-collab` or something similar.
+* Create a New file --> Markdown file (NOT R Markdown) in the project, and in the doc write your name.  Save the file as `README.md`
+* In the console, type `usethis::use_git()` to turn the directory into a git-enabled directory.  It will ask if you want to commit the new file - choose the correct number to do so.  Then it will ask if you want to restart - again, choose the correct number to do so.
+* After R restarts, in the console, type `usethis::use_github()` to connect your local repository to your Github account.
+
+After repo setup, either option:
+
+* Copy the file `git_wild.qmd` into the project root (file is in repo for lab 4).
 * Stage, commit, pull, then push to main
 * Add your partner as a collaborator to the project on GitHub (Settings > Manage Access)
 
